@@ -6,14 +6,8 @@ import { check } from 'express-validator'
 const router = new Router()
 
 router.post(
-	'/registration',
-	[
-		check('email', 'Incorrect email').isEmail(),
-		check(
-			'password',
-			'Password must be longer than 5 and shorter than 25 symbols'
-		).isLength({ min: 5, max: 25 })
-	],
+	'/register',
+	[check('email', 'Incorrect email').isEmail()],
 	userController.registration
 )
 router.post('/login', userController.login)

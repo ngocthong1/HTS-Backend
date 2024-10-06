@@ -21,12 +21,10 @@ class UserController {
 			const errors = validationResult(req)
 
 			if (!errors.isEmpty()) {
-				return res
-					.status(BAD_REQUEST)
-					.json({ message: 'Invalid email or password' })
+				return res.status(BAD_REQUEST).json({ message: 'Invalid email' })
 			}
 
-			const { email, password, role } = req.body
+			const { email, password, name, role } = req.body
 
 			// Check if such user already exists
 			const candidate = await User.findOne({ where: { email } })
@@ -41,15 +39,33 @@ class UserController {
 			const hashedPassword = await bcrypt.hash(password, 5)
 
 			// Creating new user
-			const user = await User.create({ email, password: hashedPassword, role })
+			const user = await User.create({
+				email,
+				password: hashedPassword,
+				role,
+				name
+			})
 
 			// Creating user's cart
 			const cart = await Cart.create({ userId: user.id })
 
 			// Generating JWT token
-			const token = generateJwt(user.id, user.email, user.role)
+			const accessToken = generateJwt(
+				user.id,
+				user.email,
+				user.role,
+				process.env.SECRET_KEY,
+				'1d'
+			)
+			const refreshToken = generateJwt(
+				user.id,
+				user.email,
+				user.role,
+				process.env.REFRESH_SECRET_KEY,
+				'3d'
+			)
 
-			return res.status(OK).json({ token })
+			return res.status(OK).json({ accessToken, refreshToken })
 		} catch (e) {
 			return res
 				.status(BAD_REQUEST)
@@ -76,7 +92,7 @@ class UserController {
 			if (!isPasswordValid) {
 				return res
 					.status(BAD_REQUEST)
-					.json({ message: 'Invalid password', cause: null })
+					.json({ message: 'Invalid email or password', cause: null })
 			}
 
 			// Generating JWT token

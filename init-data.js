@@ -19,7 +19,8 @@ const initData = async () => {
 			await models.User.create({
 				email: process.env.ADMIN_EMAIL,
 				password: hashedPassword,
-				role: 'ADMIN'
+				role: 'ADMIN',
+				name: 'ADMIN'
 			})
 			console.log('Init data inserted successfully!')
 		} else {
