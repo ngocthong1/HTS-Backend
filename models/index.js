@@ -1,57 +1,44 @@
-import { Brand } from './Brand.js'
-import { Product } from './Product.js'
-import { Type } from './Type.js'
-import { User } from './User.js'
-import { Cart } from './Cart.js'
-import { CartProduct } from './CartProduct.js'
-import { Rating } from './Rating.js'
-import { ProductInfo } from './ProductInfo.js'
-import sequelize from '../db.js'
-import { DataTypes } from 'sequelize'
+// models/index.js
+const { Sequelize, DataTypes } = require("sequelize");
+require("dotenv").config();
 
-// Description of relationships between entities
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+  protocol: "postgres",
+  // For SSL connections
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
+});
 
-User.hasOne(Cart)
-Cart.belongsTo(User)
+const db = {};
 
-User.hasMany(Rating)
-Rating.belongsTo(User)
+db.Sequelize = Sequelize;
+db.sequelize = sequelize;
 
-Cart.hasMany(CartProduct)
-CartProduct.belongsTo(Cart)
+// Import các mô hình
+db.User = require("./user")(sequelize, DataTypes);
+db.Product = require("./product")(sequelize, DataTypes);
+db.Cart = require("./cart")(sequelize, DataTypes);
+db.Order = require("./order")(sequelize, DataTypes);
+db.OrderItem = require("./orderItem")(sequelize, DataTypes);
+db.Image = require("./image")(sequelize, DataTypes);
 
-Type.hasMany(Product)
-Product.belongsTo(Type)
+// Thiết lập quan hệ giữa các mô hình
+db.User.hasMany(db.Cart);
+db.User.hasMany(db.Order);
+db.Order.belongsTo(db.User);
+db.Order.hasMany(db.OrderItem);
+db.OrderItem.belongsTo(db.Order);
+db.OrderItem.belongsTo(db.Product);
 
-Brand.hasMany(Product)
-Product.belongsTo(Brand)
+// Thiết lập quan hệ
+db.Product.hasMany(db.Image, { foreignKey: "productId", as: "images" });
+db.Image.belongsTo(db.Product, { foreignKey: "productId" });
+db.Cart.belongsTo(db.User, { foreignKey: "UserId" });
+db.Cart.belongsTo(db.Product, { foreignKey: "ProductId", as: "product" }); // Đảm bảo alias là "product"
 
-Product.hasMany(Rating)
-Rating.belongsTo(Product)
-
-Product.hasMany(CartProduct)
-CartProduct.belongsTo(Product)
-
-Product.hasMany(ProductInfo, { as: 'info' })
-ProductInfo.belongsTo(Product)
-
-// Helper table for many-to-many relationship between Brand and Type
-
-export const TypeBrand = sequelize.define('type_brand', {
-	id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }
-})
-
-Type.belongsToMany(Brand, { through: TypeBrand })
-Brand.belongsToMany(Type, { through: TypeBrand })
-
-export default {
-	Brand,
-	Product,
-	Type,
-	User,
-	Cart,
-	CartProduct,
-	Rating,
-	ProductInfo,
-	TypeBrand
-}
+module.exports = db;

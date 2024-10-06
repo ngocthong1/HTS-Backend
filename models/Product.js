@@ -1,12 +1,35 @@
-import sequelize from '../db.js'
-import { DataTypes } from 'sequelize'
+// models/product.js
+module.exports = (sequelize, DataTypes) => {
+  const Product = sequelize.define("Product", {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.ENUM("Male", "Female", "Children"),
+      allowNull: false,
+    },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    stock: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+  });
 
-export const Product = sequelize.define('product', {
-	id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-	name: { type: DataTypes.STRING, unique: true, allowNull: false },
-	price: { type: DataTypes.INTEGER, allowNull: false },
-	description: { type: DataTypes.STRING, allowNull: true },
-	stock: { type: DataTypes.INTEGER, allowNull: true },
-	sold: { type: DataTypes.INTEGER, allowNull: true },
-	img: { type: DataTypes.STRING, allowNull: true }
-})
+  Product.associate = (models) => {
+    Product.hasMany(models.Image, { foreignKey: "productId", as: "images" });
+  };
+
+  return Product;
+};
