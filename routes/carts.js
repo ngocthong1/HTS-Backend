@@ -112,13 +112,9 @@ router.post("/", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const { productId, quantity, actionType } = req.body; // Lấy actionType từ body
 
-  if (
-    !userId ||
-    !productId ||
-    (actionType === "ADD_PRODUCT" && quantity === undefined)
-  ) {
+  if (!productId || (actionType === "ADD_PRODUCT" && quantity === undefined)) {
     return res.status(400).json({
-      message: "userId, productId, and quantity are required for ADD_PRODUCT",
+      message: "ProductId, and quantity are required for ADD_PRODUCT",
     });
   }
 

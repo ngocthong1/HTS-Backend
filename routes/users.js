@@ -48,13 +48,14 @@ const JWT_SECRET = process.env.JWT_SECRET;
  */
 router.post("/register", async (req, res) => {
   try {
-    const { username, password, email, type } = req.body; // Thêm type vào đây
+    const { name, password, email, type } = req.body; // Thêm type vào đây
 
     // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      username,
+      name,
+      username: email,
       password: hashedPassword,
       email,
       type: type || "user", // Sử dụng giá trị mặc định nếu không có
@@ -122,6 +123,35 @@ router.post("/login", async (req, res) => {
       }, // Thêm type vào payload
       JWT_SECRET,
       { expiresIn: "10s" }
+    );
+
+    res.status(200).json({ message: "Login successful", token });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/login-firebase", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Tìm người dùng theo tên đăng nhập
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(403).json({ message: "Account Invalid" });
+    }
+
+    // Tạo token với thông tin bổ sung
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        type: user.type,
+      }, // Thêm type vào payload
+      JWT_SECRET,
+      { expiresIn: "1d" }
     );
 
     res.status(200).json({ message: "Login successful", token });

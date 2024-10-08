@@ -1,7 +1,7 @@
 // routes/orders.js
 const express = require("express");
 const router = express.Router();
-const { Order } = require("../models");
+const { Order, OrderItem, Cart } = require("../models");
 const verifyToken = require("../middleware/auth");
 
 /**
@@ -105,10 +105,43 @@ router.get("/:id", verifyToken, async (req, res) => {
  *         description: Internal server error
  */
 router.post("/", verifyToken, async (req, res) => {
+  const { total_amount, status, items } = req.body; // Lấy thông tin từ body
+
+  // Kiểm tra các tham số yêu cầu
+  if (!total_amount || !status || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({
+      message: "total_amount, status, and items are required",
+    });
+  }
+
   try {
-    const order = await Order.create(req.body);
-    res.status(201).json(order);
+    // Tạo đơn hàng
+    const order = await Order.create({
+      total_amount,
+      status,
+      UserId: req.user.id, // Lưu UserId từ thông tin xác thực
+    });
+
+    // Tạo các mục đơn hàng
+    const orderItems = items.map((item) => ({
+      quantity: item.quantity,
+      price: item.price,
+      OrderId: order.id, // Liên kết với Order
+      ProductId: item.id, // Lưu ID sản phẩm nếu có
+    }));
+
+    // Lưu các mục đơn hàng vào cơ sở dữ liệu
+    await OrderItem.bulkCreate(orderItems);
+
+    // Xóa giỏ hàng của người dùng sau khi tạo đơn hàng thành công
+    await Cart.destroy({
+      where: { UserId: req.user.id },
+    });
+
+    // Trả về đơn hàng và các mục đơn hàng
+    res.status(201).json({ order, orderItems });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 });

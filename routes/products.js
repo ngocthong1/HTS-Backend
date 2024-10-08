@@ -164,6 +164,7 @@ router.get("/", async (req, res) => {
   const page = parseInt(req.query.page) || 1; // Trang hiện tại
   const search = req.query.search || ""; // Giá trị tìm kiếm
   const category = req.query.category || ""; // Giá trị category
+  const type = req.query.type || ""; // Giá trị type
 
   const offset = (page - 1) * limit; // Tính toán chỉ số bắt đầu
 
@@ -181,6 +182,7 @@ router.get("/", async (req, res) => {
           [Op.like]: `%${search}%`, // Tìm kiếm tên sản phẩm chứa giá trị tìm kiếm
         },
         ...(category && { category }), // Lọc theo category nếu có
+        ...(type && { type }), // Lọc theo type nếu có
       },
       limit: limit,
       offset: offset,

@@ -1,6 +1,15 @@
 // models/user.js
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define("User", {
+    id: {
+      type: DataTypes.STRING, // Đổi kiểu dữ liệu thành UUID
+      defaultValue: DataTypes.UUIDV4, // Tự động tạo UUID mới
+      primaryKey: true, // Đánh dấu trường này là khóa chính
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
