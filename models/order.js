@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM("Đang xử lý", "Đã giao", "Đã hủy"),
+      type: DataTypes.ENUM("In Progress", "Delivered", "Canceled"),
       allowNull: false,
     },
   });

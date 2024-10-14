@@ -1,4 +1,6 @@
-.env
-
-/config
 node_modules/
+.env
+config.js
+etc/secrets/config.json
+etc/secrets/firebase.json
+.package-lock.json

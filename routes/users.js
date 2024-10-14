@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken"); // Thêm thư viện JWT để tạo token
 const router = express.Router();
 const { User } = require("../models");
+const { Op } = require("sequelize");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -122,7 +123,7 @@ router.post("/login", async (req, res) => {
         type: user.type,
       }, // Thêm type vào payload
       JWT_SECRET,
-      { expiresIn: "10s" }
+      { expiresIn: "5d" }
     );
 
     res.status(200).json({ message: "Login successful", token });
@@ -155,6 +156,113 @@ router.post("/login-firebase", async (req, res) => {
     );
 
     res.status(200).json({ message: "Login successful", token });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   username:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/all", async (req, res) => {
+  try {
+    const users = await User.findAll({
+      where: {
+        type: {
+          [Op.ne]: "admin", // Exclude admin users
+        },
+      },
+      attributes: ["id", "name", "username", "email", "type", "isActive"],
+    });
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/users/{id}/status:
+ *   patch:
+ *     summary: Update user active status
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *             required:
+ *               - isActive
+ *     responses:
+ *       200:
+ *         description: User status updated successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await user.update({ isActive });
+
+    res.status(200).json({
+      message: "User status updated successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        isActive: user.isActive,
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

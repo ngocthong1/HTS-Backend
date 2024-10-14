@@ -53,8 +53,6 @@ const { Op } = require("sequelize");
 router.get("/categories", async (req, res) => {
   try {
     // Ghi log để kiểm tra
-    console.log("Fetching unique categories...");
-
     const categories = await Product.findAll();
 
     // Lấy danh sách category từ kết quả
@@ -289,11 +287,39 @@ router.get("/:id", async (req, res) => {
  *         description: Internal server error
  */
 router.post("/", verifyToken, async (req, res) => {
+  const { name, description, price, type, category, stock, images } = req.body;
+
   try {
-    const product = await Product.create(req.body);
-    res.status(201).json(product);
+    // Tạo sản phẩm mới
+    const newProduct = await Product.create({
+      name,
+      description,
+      price,
+      type,
+      category,
+      stock,
+    });
+
+    // Nếu có hình ảnh, thêm chúng vào cơ sở dữ liệu
+    if (images && images.length > 0) {
+      const imagePromises = images.map((url) => {
+        return Image.create({
+          url,
+          productId: newProduct.id,
+        });
+      });
+      await Promise.all(imagePromises);
+    }
+
+    return res.status(201).json({
+      message: "Product created successfully",
+      product: newProduct,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error creating product:", error);
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 });
 
@@ -333,19 +359,45 @@ router.post("/", verifyToken, async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, description, price, type, category, stock, images } = req.body;
+
   try {
-    const [updated] = await Product.update(req.body, {
-      where: { id: req.params.id },
-    });
-    if (updated) {
-      const updatedProduct = await Product.findByPk(req.params.id);
-      res.status(200).json(updatedProduct);
-    } else {
-      res.status(404).json({ message: "Product not found" });
+    // Tìm sản phẩm theo ID
+    const product = await Product.findByPk(id);
+    if (!product) {
+      console.log(123123);
+
+      return res.status(404).json({ message: "Product not found" });
     }
+
+    // Cập nhật thông tin sản phẩm
+    product.name = name;
+    product.description = description;
+    product.price = price;
+    product.type = type;
+    product.category = category;
+    product.stock = stock;
+
+    await product.save(); // Lưu thay đổi sản phẩm
+
+    // Cập nhật hình ảnh
+    if (images) {
+      // Xóa các hình ảnh cũ
+      await Image.destroy({ where: { productId: id } });
+
+      // Thêm các hình ảnh mới
+      const imagePromises = images.map((url) =>
+        Image.create({ url, productId: id })
+      );
+      await Promise.all(imagePromises);
+    }
+
+    res.status(200).json({ message: "Product updated successfully", product });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error updating product:", error);
+    res.status(500).json({ message: "Failed to update product" });
   }
 });
 

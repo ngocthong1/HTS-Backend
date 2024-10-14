@@ -29,5 +29,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: "user", // Giá trị mặc định
     },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true, // Users are active by default
+    },
   });
 };

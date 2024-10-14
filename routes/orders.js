@@ -1,7 +1,7 @@
 // routes/orders.js
 const express = require("express");
 const router = express.Router();
-const { Order, OrderItem, Cart } = require("../models");
+const { Order, OrderItem, Cart, Product, Image } = require("../models");
 const verifyToken = require("../middleware/auth");
 
 /**
@@ -25,12 +25,25 @@ const verifyToken = require("../middleware/auth");
  *       500:
  *         description: Internal server error
  */
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Lấy page và limit từ query params
+  const offset = (page - 1) * limit; // Tính toán offset
+
   try {
-    const orders = await Order.findAll();
-    res.status(200).json(orders);
+    const { count, rows } = await Order.findAndCountAll({
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+    });
+
+    res.json({
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+      orders: rows,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "An error occurred while fetching orders." });
   }
 });
 
@@ -59,11 +72,45 @@ router.get("/", verifyToken, async (req, res) => {
  */
 router.get("/:id", verifyToken, async (req, res) => {
   try {
-    const order = await Order.findByPk(req.params.id);
-    if (order) {
-      res.status(200).json(order);
+    const orders = await Order.findAll({
+      where: {
+        UserId: req.params.id,
+      },
+      include: [
+        {
+          model: OrderItem,
+          include: [
+            {
+              model: Product,
+              include: [
+                {
+                  model: Image,
+                  as: "images",
+                  attributes: ["url"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    // Tính tổng số sản phẩm cho mỗi đơn hàng
+    const ordersWithTotal = orders.map((order) => {
+      const totalProducts = order.OrderItems.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      ); // Giả sử có trường `quantity` trong OrderItem
+      return {
+        ...order.toJSON(), // Chuyển đổi đối tượng Order sang JSON
+        totalProducts, // Thêm tổng số sản phẩm vào kết quả
+      };
+    });
+
+    if (ordersWithTotal.length > 0) {
+      res.status(200).json(ordersWithTotal);
     } else {
-      res.status(404).json({ message: "Order not found" });
+      res.status(404).json({ message: "No orders found" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -185,19 +232,27 @@ router.post("/", verifyToken, async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/:id", async (req, res) => {
+  const orderId = req.params.id;
+  const { status } = req.body; // Lấy trạng thái mới từ body request
+
   try {
-    const [updated] = await Order.update(req.body, {
-      where: { id: req.params.id },
-    });
-    if (updated) {
-      const updatedOrder = await Order.findByPk(req.params.id);
-      res.status(200).json(updatedOrder);
-    } else {
-      res.status(404).json({ message: "Order not found" });
+    // Tìm đơn hàng theo ID
+    const order = await Order.findByPk(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
     }
+
+    // Cập nhật trạng thái
+    order.status = status;
+    await order.save();
+
+    res
+      .status(200)
+      .json({ message: "Order status updated successfully", order });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error updating order status:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -236,6 +291,43 @@ router.delete("/:id", verifyToken, async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/detail/:id", async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    const order = await Order.findOne({
+      where: { id: orderId },
+      include: [
+        {
+          model: OrderItem,
+          attributes: ["ProductId", "quantity", "price"],
+          include: [
+            {
+              model: Product,
+              include: [
+                {
+                  model: Image,
+                  as: "images",
+                  attributes: ["id", "url", "alt", "isPrimary"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
