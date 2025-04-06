@@ -1,6 +1,9 @@
-import sequelize from '../db.js'
-import { DataTypes } from 'sequelize'
-
-export const Cart = sequelize.define('cart', {
-	id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }
-})
+// models/cart.js
+module.exports = (sequelize, DataTypes) => {
+  return sequelize.define("Cart", {
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+  });
+};
