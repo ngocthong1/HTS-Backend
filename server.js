@@ -25,8 +25,13 @@ app.use("/api/carts", cartRoutes);
 app.use("/api/orders", orderRoutes);
 
 // Đồng bộ hóa các mô hình với cơ sở dữ liệu
-db.sequelize.sync().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+db.sequelize.sync()
+  .then(() => {
+    console.log('Đã kết nối và đồng bộ cơ sở dữ liệu thành công.');
+    app.listen(PORT, () => {
+      console.log(`Máy chủ đang chạy trên cổng ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Không thể kết nối đến cơ sở dữ liệu:', error);
   });
-});

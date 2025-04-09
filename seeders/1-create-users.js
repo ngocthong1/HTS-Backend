@@ -29,16 +29,16 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-      {
-        id: uuidv4(), // Tạo UUID cho người dùng
-        name: "Seller User", // Thêm trường name
-        username: "seller1",
-        password: hashedPasswordSeller,
-        email: "seller1@example.com",
-        type: "seller",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
+      // {
+      //   id: uuidv4(), // Tạo UUID cho người dùng
+      //   name: "Seller User", // Thêm trường name
+      //   username: "seller1",
+      //   password: hashedPasswordSeller,
+      //   email: "seller1@example.com",
+      //   type: "seller",
+      //   createdAt: new Date(),
+      //   updatedAt: new Date(),
+      // },
     ]);
   },
 
