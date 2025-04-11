@@ -4,27 +4,9 @@ const router = express.Router();
 const { Order, OrderItem, Cart, Product, Image } = require("../models");
 const verifyToken = require("../middleware/auth");
 
-/**
- * @swagger
- * tags:
- *   name: Orders
- *   description: Order management
- */
 
-/**
- * @swagger
- * /api/orders:
- *   get:
- *     summary: Retrieve a list of orders
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: A list of orders
- *       500:
- *         description: Internal server error
- */
+
+
 router.get("/", async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Lấy page và limit từ query params
   const offset = (page - 1) * limit; // Tính toán offset
@@ -47,29 +29,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/orders/{id}:
- *   get:
- *     summary: Retrieve an order by ID
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the order to retrieve
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: A single order
- *       404:
- *         description: Order not found
- *       500:
- *         description: Internal server error
- */
+
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const orders = await Order.findAll({
@@ -117,40 +77,7 @@ router.get("/:id", verifyToken, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/orders:
- *   post:
- *     summary: Create a new order
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               userId:
- *                 type: integer
- *               items:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     productId:
- *                       type: integer
- *                     quantity:
- *                       type: integer
- *             required:
- *               - userId
- *     responses:
- *       201:
- *         description: Order created successfully
- *       500:
- *         description: Internal server error
- */
+
 router.post("/", verifyToken, async (req, res) => {
   const { total_amount, status, items } = req.body; // Lấy thông tin từ body
 
@@ -193,45 +120,7 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/orders/{id}:
- *   put:
- *     summary: Update an order by ID
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the order to update
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               items:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     productId:
- *                       type: integer
- *                     quantity:
- *                       type: integer
- *     responses:
- *       200:
- *         description: Order updated successfully
- *       404:
- *         description: Order not found
- *       500:
- *         description: Internal server error
- */
+
 router.put("/:id", async (req, res) => {
   const orderId = req.params.id;
   const { status } = req.body; // Lấy trạng thái mới từ body request
@@ -256,29 +145,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/orders/{id}:
- *   delete:
- *     summary: Delete an order by ID
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the order to delete
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Order deleted successfully
- *       404:
- *         description: Order not found
- *       500:
- *         description: Internal server error
- */
+
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const deleted = await Order.destroy({

@@ -4,3 +4,6 @@ config.js
 etc/secrets/config.json
 etc/secrets/firebase.json
 .package-lock.json
+.qodo
+
+.early.coverage

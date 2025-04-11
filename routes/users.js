@@ -8,45 +8,7 @@ const { Op } = require("sequelize");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-/**
- * @swagger
- * tags:
- *   name: Users
- *   description: User management
- */
 
-/**
- * @swagger
- * /api/users/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               password:
- *                 type: string
- *               email:
- *                 type: string
- *               type:
- *                 type: string
- *                 enum: [admin, user, seller]
- *             required:
- *               - username
- *               - password
- *               - email
- *     responses:
- *       201:
- *         description: User registered successfully
- *       500:
- *         description: Internal server error
- */
 router.post("/register", async (req, res) => {
   try {
     const { name, password, email, type } = req.body; // Thêm type vào đây
@@ -68,34 +30,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/users/login:
- *   post:
- *     summary: Login a user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *             required:
- *               - email
- *               - password
- *     responses:
- *       200:
- *         description: Login successful
- *       401:
- *         description: Invalid username or password
- *       500:
- *         description: Internal server error
- */
+
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -161,37 +96,7 @@ router.post("/login-firebase", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/users:
- *   get:
- *     summary: Get all users
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of all users
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   name:
- *                     type: string
- *                   username:
- *                     type: string
- *                   email:
- *                     type: string
- *                   type:
- *                     type: string
- *       500:
- *         description: Internal server error
- */
+
 router.get("/all", async (req, res) => {
   try {
     const users = await User.findAll({
@@ -208,39 +113,7 @@ router.get("/all", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/users/{id}/status:
- *   patch:
- *     summary: Update user active status
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               isActive:
- *                 type: boolean
- *             required:
- *               - isActive
- *     responses:
- *       200:
- *         description: User status updated successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
+
 router.patch("/:id/status", async (req, res) => {
   try {
     const { id } = req.params;

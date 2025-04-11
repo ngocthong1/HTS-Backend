@@ -3,14 +3,11 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors"); // Import cors
 const db = require("./models");
-const swaggerUi = require("swagger-ui-express");
-const swaggerDocs = require("./swaggerOptions");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors()); // Sử dụng middleware cors
 app.use(bodyParser.json());
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Import routes
 const userRoutes = require("./routes/users");

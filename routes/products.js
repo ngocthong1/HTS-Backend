@@ -4,52 +4,7 @@ const router = express.Router();
 const { Product, Image } = require("../models");
 const verifyToken = require("../middleware/auth");
 const { Op } = require("sequelize");
-/**
- * @swagger
- * tags:
- *   name: Categories
- *   description: Category management
- */
 
-/**
- * @swagger
- * /api/products/categories:
- *   get:
- *     summary: Retrieve a list of unique categories from products
- *     tags: [Categories]
- *     responses:
- *       200:
- *         description: A list of unique categories retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 totalCategories:
- *                   type: integer
- *                   description: Total number of unique categories
- *                 categories:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         description: Unique identifier for the category
- *                       name:
- *                         type: string
- *                         description: Name of the category
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Error message
- */
 router.get("/categories", async (req, res) => {
   try {
     // Ghi log để kiểm tra
@@ -75,88 +30,9 @@ router.get("/categories", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * tags:
- *   name: Products
- *   description: Product management
- */
 
-/**
- * @swagger
- * /api/products:
- *   get:
- *     summary: Retrieve a list of products
- *     tags: [Products]
- *     parameters:
- *       - name: limit
- *         in: query
- *         description: Number of items per page
- *         required: false
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Current page number
- *         required: false
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: search
- *         in: query
- *         description: Search for products by name
- *         required: false
- *         schema:
- *           type: string
- *       - name: category
- *         in: query
- *         description: Filter products by category
- *         required: false
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: A list of products retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 totalItems:
- *                   type: integer
- *                   description: Total number of items found
- *                 totalPages:
- *                   type: integer
- *                   description: Total number of pages
- *                 currentPage:
- *                   type: integer
- *                   description: Current page number
- *                 itemsPerPage:
- *                   type: integer
- *                   description: Number of items per page
- *                 products:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         description: Product ID
- *                       name:
- *                         type: string
- *                         description: Product name
- *                       images:
- *                         type: array
- *                         items:
- *                           type: object
- *                           properties:
- *                             url:
- *                               type: string
- *                               description: URL of the product image
- *       500:
- *         description: Internal server error
- */
+
+
 router.get("/", async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Số mục mỗi trang
   const page = parseInt(req.query.page) || 1; // Trang hiện tại
@@ -213,27 +89,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/products/{id}:
- *   get:
- *     summary: Retrieve a product by ID
- *     tags: [Products]
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the product to retrieve
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: A single product
- *       404:
- *         description: Product not found
- *       500:
- *         description: Internal server error
- */
+
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
@@ -256,36 +112,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/products:
- *   post:
- *     summary: Create a new product
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               price:
- *                 type: number
- *               description:
- *                 type: string
- *             required:
- *               - name
- *               - price
- *     responses:
- *       201:
- *         description: Product created successfully
- *       500:
- *         description: Internal server error
- */
+
 router.post("/", verifyToken, async (req, res) => {
   const { name, description, price, type, category, stock, images } = req.body;
 
@@ -323,42 +150,7 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/products/{id}:
- *   put:
- *     summary: Update a product by ID
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the product to update
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               price:
- *                 type: number
- *               description:
- *                 type: string
- *     responses:
- *       200:
- *         description: Product updated successfully
- *       404:
- *         description: Product not found
- *       500:
- *         description: Internal server error
- */
+
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { name, description, price, type, category, stock, images } = req.body;
@@ -401,29 +193,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/products/{id}:
- *   delete:
- *     summary: Delete a product by ID
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the product to delete
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Product deleted successfully
- *       404:
- *         description: Product not found
- *       500:
- *         description: Internal server error
- */
+
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const deleted = await Product.destroy({

@@ -4,34 +4,9 @@ const router = express.Router();
 const { Cart, Product } = require("../models");
 const verifyToken = require("../middleware/auth");
 
-/**
- * @swagger
- * tags:
- *   name: Carts
- *   description: Cart management
- */
 
-/**
- * @swagger
- * /api/carts/{userId}:
- *   get:
- *     summary: Retrieve the cart of a user
- *     tags: [Carts]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: userId
- *         in: path
- *         required: true
- *         description: The ID of the user whose cart to retrieve
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: A list of carts for the user
- *       500:
- *         description: Internal server error
- */
+
+
 router.get("/:userId", verifyToken, async (req, res) => {
   try {
     // Tìm tất cả các sản phẩm trong giỏ hàng của người dùng
@@ -74,40 +49,7 @@ router.get("/:userId", verifyToken, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/carts:
- *   post:
- *     summary: Create a new cart
- *     tags: [Carts]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               userId:
- *                 type: integer
- *               items:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     productId:
- *                       type: integer
- *                     quantity:
- *                       type: integer
- *             required:
- *               - userId
- *     responses:
- *       201:
- *         description: Cart created successfully
- *       500:
- *         description: Internal server error
- */
+
 router.post("/", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const { productId, quantity, actionType } = req.body; // Lấy actionType từ body
