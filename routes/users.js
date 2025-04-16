@@ -1,11 +1,20 @@
 // routes/users.js
+/**
+ * Module quản lý các route liên quan đến người dùng
+ * Bao gồm các chức năng đăng ký, đăng nhập (cả thông thường và qua Firebase)
+ *
+ * Hệ thống hỗ trợ hai phương thức xác thực:
+ * 1. Xác thực thông thường với email/password
+ * 2. Xác thực thông qua Firebase Authentication (endpoint /login-firebase)
+ */
 const express = require("express");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken"); // Thêm thư viện JWT để tạo token
+const jwt = require("jsonwebtoken"); // Thư viện JWT để tạo token xác thực
 const router = express.Router();
 const { User } = require("../models");
 const { Op } = require("sequelize");
 
+// Bí mật để ký JWT token, lấy từ biến môi trường
 const JWT_SECRET = process.env.JWT_SECRET;
 
 
@@ -67,18 +76,28 @@ router.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * Route xử lý đăng nhập thông qua Firebase Authentication
+ *
+ * Endpoint này nhận email từ client sau khi người dùng đã xác thực thành công với Firebase
+ * Sau đó kiểm tra xem email này có tồn tại trong cơ sở dữ liệu của hệ thống hay không
+ * Nếu tồn tại, tạo JWT token để client có thể sử dụng cho các yêu cầu tiếp theo
+ */
 router.post("/login-firebase", async (req, res) => {
   try {
+    // Lấy email từ request body (đã được xác thực bởi Firebase trên client)
     const { email } = req.body;
 
-    // Tìm người dùng theo tên đăng nhập
+    // Tìm người dùng theo email trong cơ sở dữ liệu PostgreSQL
     const user = await User.findOne({ where: { email } });
 
+    // Nếu không tìm thấy người dùng, trả về lỗi
     if (!user) {
       return res.status(403).json({ message: "Account Invalid" });
     }
 
-    // Tạo token với thông tin bổ sung
+    // Tạo JWT token với thông tin người dùng
+    // Token này sẽ được sử dụng cho việc xác thực các API request tiếp theo
     const token = jwt.sign(
       {
         id: user.id,
@@ -87,11 +106,13 @@ router.post("/login-firebase", async (req, res) => {
         type: user.type,
       }, // Thêm type vào payload
       JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" } // Token có hiệu lực trong 1 ngày
     );
 
+    // Trả về token cho client
     res.status(200).json({ message: "Login successful", token });
   } catch (error) {
+    // Xử lý lỗi nếu có
     res.status(500).json({ error: error.message });
   }
 });

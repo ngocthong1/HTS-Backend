@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
     },
     type: {
-      type: DataTypes.ENUM("admin", "user", "seller"), // Thêm thuộc tính type
+      type: DataTypes.ENUM("admin", "user"), // Thêm thuộc tính type
       allowNull: false,
       defaultValue: "user", // Giá trị mặc định
     },

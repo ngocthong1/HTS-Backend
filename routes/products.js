@@ -30,9 +30,6 @@ router.get("/categories", async (req, res) => {
   }
 });
 
-
-
-
 router.get("/", async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Số mục mỗi trang
   const page = parseInt(req.query.page) || 1; // Trang hiện tại
@@ -89,7 +86,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
@@ -112,8 +108,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
-router.post("/", verifyToken, async (req, res) => {
+router.post("/newproduct", verifyToken, async (req, res) => {
   const { name, description, price, type, category, stock, images } = req.body;
 
   try {
@@ -138,10 +133,7 @@ router.post("/", verifyToken, async (req, res) => {
       await Promise.all(imagePromises);
     }
 
-    return res.status(201).json({
-      message: "Product created successfully",
-      product: newProduct,
-    });
+    return res.status(201).json({   message: "Product created successfully", product: newProduct, });
   } catch (error) {
     console.error("Error creating product:", error);
     return res.status(500).json({
@@ -149,7 +141,6 @@ router.post("/", verifyToken, async (req, res) => {
     });
   }
 });
-
 
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
@@ -192,7 +183,6 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ message: "Failed to update product" });
   }
 });
-
 
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
