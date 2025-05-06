@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { Product, Image } = require("../models");
-const verifyToken = require("../middleware/auth");
+const { verifyToken , isAdmin} = require("../middleware/auth");
 const { Op } = require("sequelize");
 
 router.get("/categories", async (req, res) => {
@@ -89,6 +89,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
+
       include: [
         {
           model: Image,

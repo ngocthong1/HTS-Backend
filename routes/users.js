@@ -13,7 +13,7 @@ const jwt = require("jsonwebtoken"); // Thư viện JWT để tạo token xác t
 const router = express.Router();
 const { User } = require("../models");
 const { Op } = require("sequelize");
-const verifyToken = require("../middleware/auth"); // Middleware xác thực token
+const {verifyToken, isAdmin} = require("../middleware/auth"); // Middleware xác thực token
 
 // Bí mật để ký JWT token, lấy từ biến môi trường
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -194,7 +194,7 @@ router.get("/profile", verifyToken, async (req, res) => {
 router.put("/profile", verifyToken, async (req, res) => {
   try {
     const { name, email, currentPassword, newPassword } = req.body;
-    
+
     const user = await User.findByPk(req.user.id);
 
     if (!user) {

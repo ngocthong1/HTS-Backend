@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { Cart, Product } = require("../models");
-const verifyToken = require("../middleware/auth");
+const { verifyToken } = require("../middleware/auth");
 
 
 
@@ -20,23 +20,19 @@ router.get("/:userId", verifyToken, async (req, res) => {
         },
       ],
     });
-
     // Tính toán tổng số lượng và tổng giá trị
     const totalPrice = carts.reduce((total, cart) => {
       return total + cart.quantity * cart.product.price;
     }, 0);
-
     const ordersCount = carts.reduce((total, cart) => {
       return total + cart.quantity;
     }, 0);
-
     const addedProducts = carts.map((cart) => ({
       id: cart.product.id,
       name: cart.product.name,
       price: cart.product.price,
       quantity: cart.quantity,
     }));
-
     // Trả về phản hồi
     res.status(200).json({
       checkout: false,
@@ -59,12 +55,10 @@ router.post("/", verifyToken, async (req, res) => {
       message: "ProductId, and quantity are required for ADD_PRODUCT",
     });
   }
-
   try {
     const existingCart = await Cart.findOne({
       where: { UserId: userId, ProductId: productId },
     });
-
     switch (actionType) {
       case "ADD_PRODUCT":
         if (existingCart) {
@@ -79,7 +73,6 @@ router.post("/", verifyToken, async (req, res) => {
           });
           return res.status(201).json(newCart);
         }
-
       case "INCREASE":
         if (existingCart) {
           existingCart.quantity += 1; // Tăng số lượng thêm 1
@@ -88,7 +81,6 @@ router.post("/", verifyToken, async (req, res) => {
         } else {
           return res.status(404).json({ message: "Product not found in cart" });
         }
-
       case "DECREASE":
         if (existingCart) {
           existingCart.quantity -= 1; // Giảm số lượng thêm 1
@@ -103,7 +95,6 @@ router.post("/", verifyToken, async (req, res) => {
         } else {
           return res.status(404).json({ message: "Product not found in cart" });
         }
-
       case "DELETE":
         if (existingCart) {
           await existingCart.destroy(); // Xóa sản phẩm khỏi giỏ
