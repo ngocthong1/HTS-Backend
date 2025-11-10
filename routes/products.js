@@ -109,7 +109,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, isAdmin,async (req, res) => {
   const { name, description, price, type, category, stock, images } = req.body;
 
   try {
