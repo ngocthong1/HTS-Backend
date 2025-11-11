@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { Product, Image } = require("../models");
-const verifyToken = require("../middleware/auth");
+const { verifyToken , isAdmin} = require("../middleware/auth");
 const { Op } = require("sequelize");
 
 router.get("/categories", async (req, res) => {
@@ -89,6 +89,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
+
       include: [
         {
           model: Image,
@@ -108,7 +109,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/newproduct", verifyToken, async (req, res) => {
+router.post("/", verifyToken, isAdmin,async (req, res) => {
   const { name, description, price, type, category, stock, images } = req.body;
 
   try {
@@ -150,11 +151,9 @@ router.put("/:id", async (req, res) => {
     // Tìm sản phẩm theo ID
     const product = await Product.findByPk(id);
     if (!product) {
-      console.log(123123);
 
       return res.status(404).json({ message: "Product not found" });
     }
-
     // Cập nhật thông tin sản phẩm
     product.name = name;
     product.description = description;
@@ -164,6 +163,7 @@ router.put("/:id", async (req, res) => {
     product.stock = stock;
 
     await product.save(); // Lưu thay đổi sản phẩm
+    console.log("hhihiihh")
 
     // Cập nhật hình ảnh
     if (images) {

@@ -13,6 +13,7 @@ const jwt = require("jsonwebtoken"); // Thư viện JWT để tạo token xác t
 const router = express.Router();
 const { User } = require("../models");
 const { Op } = require("sequelize");
+const {verifyToken, isAdmin} = require("../middleware/auth"); // Middleware xác thực token
 
 // Bí mật để ký JWT token, lấy từ biến môi trường
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -33,7 +34,7 @@ router.post("/register", async (req, res) => {
       type: type || "user", // Sử dụng giá trị mặc định nếu không có
     });
 
-    res.status(201).json({ message: "User registered successfully", user });
+    res.status(201).json({ message: "User registered successfully",user });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -156,6 +157,112 @@ router.patch("/:id/status", async (req, res) => {
         email: user.email,
         isActive: user.isActive,
       },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Route lấy thông tin người dùng hiện tại
+ *
+ * @route GET /api/users/profile
+ * @access Private - Yêu cầu xác thực token
+ */
+router.get("/profile", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'name', 'email', 'type', 'isActive'] // Không trả về mật khẩu
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Route cập nhật thông tin tài khoản người dùng
+ *
+ * @route PUT /api/users/profile
+ * @access Private - Yêu cầu xác thực token
+ */
+router.put("/profile", verifyToken, async (req, res) => {
+  try {
+    const { name, email, currentPassword, newPassword } = req.body;
+
+    const user = await User.findByPk(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    // Chuẩn bị đối tượng cập nhật
+    const updateData = {};
+
+    // Cập nhật tên nếu được cung cấp
+    if (name) updateData.name = name;
+
+    // Xử lý cập nhật email
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email đã được sử dụng" });
+      }
+      updateData.email = email;
+      updateData.username = email;
+    }
+
+    // Xử lý thay đổi mật khẩu
+    if (currentPassword || newPassword) {
+      // Kiểm tra cả hai mật khẩu đã được cung cấp chưa
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          message: "Vui lòng cung cấp cả mật khẩu hiện tại và mật khẩu mới"
+        });
+      }
+
+      // Xác minh mật khẩu hiện tại
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Mật khẩu hiện tại không chính xác" });
+      }
+
+      // Mã hóa mật khẩu mới
+      updateData.password = await bcrypt.hash(newPassword, 10);
+    }
+
+    // Kiểm tra có dữ liệu cập nhật không
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "Không có thông tin nào được cập nhật" });
+    }
+
+    // Cập nhật thông tin người dùng
+    await user.update(updateData);
+
+    // Tạo token mới nếu email thay đổi
+    const newToken = updateData.email ?
+      jwt.sign(
+        { id: user.id, username: user.username, email: user.email, type: user.type },
+        JWT_SECRET,
+        { expiresIn: "5d" }
+      ) : null;
+
+    // Trả về kết quả
+    res.status(200).json({
+      message: "Cập nhật thông tin thành công",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        type: user.type,
+        isActive: user.isActive
+      },
+      ...(newToken && { token: newToken })
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
