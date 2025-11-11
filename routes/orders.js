@@ -178,7 +178,7 @@ router.get("/detail/:id", async (req, res) => {
                 {
                   model: Image,
                   as: "images",
-                  attributes: ["id", "url", "alt", "isPrimary"],
+                  attributes: ["url"],
                 },
               ],
             },
